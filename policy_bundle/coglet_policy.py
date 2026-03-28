@@ -16,9 +16,19 @@ from mettagrid.simulator import Action  # type: ignore[import-untyped]
 ELEMENTS = ("carbon", "oxygen", "germanium", "silicon")
 DIRS = ("east", "south", "west", "north")
 
-# Known map layout from cogora: gear stations are at fixed offsets from spawn
-# Hub is near spawn. Extractors are in the 4 cardinal directions.
-# We assign each agent to explore a specific quadrant to find resources.
+# Known map layout (from cogora/mettagrid_sdk):
+# Hub at spawn (0,0). Gear stations at known offsets.
+# Extractors at ~28 cells out in corners.
+# Coordinates: (x, y) where x=east, y=south from spawn.
+_STATION_OFFSETS = {
+    "aligner": (-3, 4),
+    "scrambler": (-1, 4),
+    "miner": (1, 4),
+    "scout": (3, 4),
+}
+# Extractor regions (approximate corners where resources are)
+_EXTRACTOR_REGIONS = [(-20, -20), (20, -20), (-20, 20), (20, 20)]
+_HUB_POS = (0, 0)
 
 
 @dataclass
@@ -149,10 +159,9 @@ class CogletAgentPolicy(AgentPolicy):
         return self._smart_walk(obs, DIRS[s.wd])
 
     def _pos(self, obs: Any) -> tuple[int, int] | None:
+        """Get position relative to spawn from lp features (global tokens)."""
         e = w = n = s = 0
         for tk in obs.tokens:
-            if tk.location != self._c:
-                continue
             f = tk.feature.name
             if f == "lp:east": e = int(tk.value)
             elif f == "lp:west": w = int(tk.value)
@@ -160,7 +169,25 @@ class CogletAgentPolicy(AgentPolicy):
             elif f == "lp:south": s = int(tk.value)
         if e == 0 and w == 0 and n == 0 and s == 0:
             return None
-        return (s - n, e - w)
+        # Return (x, y) where x=east-west, y=south-north (matching cogora convention)
+        return (e - w, s - n)
+
+    def _goto_abs(self, obs: Any, target: tuple[int, int]) -> Action:
+        """Navigate toward absolute position (relative to spawn) using lp."""
+        pos = self._pos(obs)
+        if pos is None:
+            return self._wander(obs)
+        dx = target[0] - pos[0]
+        dy = target[1] - pos[1]
+        if abs(dx) <= 1 and abs(dy) <= 1:
+            # Close enough — we're there
+            return self._act("noop")
+        # Pick primary direction
+        if abs(dx) >= abs(dy):
+            d = "east" if dx > 0 else "west"
+        else:
+            d = "south" if dy > 0 else "north"
+        return self._smart_walk(obs, d)
 
     def _stuck(self, obs: Any) -> bool:
         p = self._pos(obs)
@@ -227,46 +254,43 @@ class CogletAgentPolicy(AgentPolicy):
                     return self._go(best)
             return self._wander(obs)
 
-        # HEARTS: have aligner but no hearts → hub
+        # HEARTS: have aligner but no hearts → navigate to hub
         if gear == "aligner":
             hub = self._find(obs, ["type:hub"])
             if hub:
                 return self._go(hub)
-            return self._wander(obs)
+            # Can't see hub — navigate toward (0,0)
+            return self._goto_abs(obs, _HUB_POS)
 
-        # GEAR: can afford aligner → buy it
+        # GEAR: can afford aligner → navigate to aligner station
         if self._can_buy(inv):
             st = self._find(obs, ["type:c:aligner"])
             if st:
                 return self._go(st)
-            hub = self._find(obs, ["type:hub"])
-            if hub:
-                return self._go(hub)
-            return self._wander(obs)
+            # Navigate to known aligner station position
+            return self._goto_abs(obs, _STATION_OFFSETS["aligner"])
 
-        # MINE: find extractors for resources we're missing
-        # Only target extractors for elements we have LESS THAN 1 of
+        # MINE: navigate to extractor regions, cycling through corners
+        # If we can see a needed extractor, go to it directly
         needed = [e for e in ELEMENTS if inv.get(e, 0) < 1]
         if not needed:
-            # Have all 4 types but can't buy? Need more carbon (need 3)
             needed = [e for e in ELEMENTS if inv.get(e, 0) < 3]
         if not needed:
-            needed = list(ELEMENTS)  # shouldn't happen
+            needed = list(ELEMENTS)
 
-        # Look for extractors of types we need
         needed_tags = [f"type:{e}_extractor" for e in needed]
         ext = self._find(obs, needed_tags)
         if ext:
             return self._go(ext)
 
-        # Every 50 steps, switch explore direction
+        # Can't see needed extractors — navigate to extractor regions
         s.explore_steps += 1
-        if s.explore_steps > 50:
+        if s.explore_steps > 80:
             s.explore_steps = 0
             s.explore_dir = (s.explore_dir + 1) % 4
 
-        # Walk in explore direction to find new extractors
-        return self._smart_walk(obs, DIRS[s.explore_dir])
+        target_region = _EXTRACTOR_REGIONS[s.explore_dir % len(_EXTRACTOR_REGIONS)]
+        return self._goto_abs(obs, target_region)
 
     def reset(self, simulation: Any = None) -> None:
         self._s = S(wd=self._id % 4, explore_dir=self._id % 4)
