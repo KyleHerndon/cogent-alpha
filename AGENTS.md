@@ -19,7 +19,8 @@ src/coglet/
 ├── runtime.py         # CogletRuntime (spawn, shutdown, tree, restart, tracing)
 ├── lifelet.py         # LifeLet mixin (on_start/on_stop lifecycle hooks)
 ├── ticklet.py         # TickLet mixin + @every decorator (periodic execution)
-├── codelet.py         # CodeLet mixin (mutable function table)
+├── proglet.py         # ProgLet mixin (unified program table with pluggable executors)
+├── llm_executor.py   # LLMExecutor (multi-turn LLM conversations with tool use)
 ├── gitlet.py          # GitLet mixin (repo-as-policy, git patches)
 ├── loglet.py          # LogLet mixin (separate log channel with levels)
 ├── mullet.py          # MulLet mixin (fan-out N children, scatter/gather)
@@ -106,9 +107,19 @@ Order in the class definition matters (MRO). Mixins that override Coglet methods
 - `on_ticker_error(method_name, error)` — called when a ticker raises. Override to
   customize. Default: log via LogLet if available. `CancelledError` is re-raised.
 
-#### codelet.py — Mutable Function Table
-- `self.functions: dict[str, Callable]` — live Python callables
-- `@enact("register")` — hot-swap functions at runtime via `guide()`
+#### proglet.py — Unified Program Table
+- `self.programs: dict[str, Program]` — named programs with pluggable executors
+- `Program(executor, fn, system, tools, parser, config)` — unit of computation
+- `Executor` protocol — pluggable backend (`CodeExecutor`, `LLMExecutor`)
+- `@enact("register")` — register/replace programs at runtime via `guide()`
+- `@enact("executor")` — register custom executors at runtime
+- `await self.invoke(name, context)` — run a program by name
+
+#### llm_executor.py — LLM Conversations
+- `LLMExecutor(client)` — executor for multi-turn LLM conversations
+- Supports tool use — programs can invoke other programs as LLM tools
+- Supports callable system prompts — `system(context)` for dynamic prompts
+- Configurable via `Program.config`: model, temperature, max_tokens, max_turns
 
 #### gitlet.py — Repo-as-Policy
 - `repo_path` — defaults to cwd
@@ -156,7 +167,7 @@ PYTHONPATH=src python -m pytest tests/ -v
 - `test_coglet.py` — Coglet base, decorators, dispatch, COG interface
 - `test_handle.py` — Command, CogletConfig, CogletHandle
 - `test_runtime.py` — spawn, shutdown, tree, trace, restart
-- `test_mixins.py` — LifeLet, TickLet, CodeLet, GitLet, LogLet, MulLet
+- `test_mixins.py` — LifeLet, TickLet, ProgLet, GitLet, LogLet, MulLet
 - `test_improvements.py` — SuppressLet, tree, trace, ticker errors, restart, on_child_error
 - `test_integration.py` — multi-layer hierarchies, cross-mixin interactions
 

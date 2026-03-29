@@ -37,7 +37,7 @@ A Coglet is both: every COG is itself a LET under a higher COG, forming a recurs
 
 ### Mixins
 
-LifeLet (lifecycle hooks), GitLet (repo-as-policy), LogLet (log stream), TickLet (`@every` periodic), CodeLet (mutable function table), MulLet (fan-out N children), SuppressLet (output gating).
+LifeLet (lifecycle hooks), GitLet (repo-as-policy), LogLet (log stream), TickLet (`@every` periodic), ProgLet (unified program table with pluggable executors), MulLet (fan-out N children), SuppressLet (output gating).
 
 ### Runtime Features
 
@@ -49,7 +49,7 @@ LifeLet (lifecycle hooks), GitLet (repo-as-policy), LogLet (log stream), TickLet
 
 ### CvC Player Stack
 
-Coach (Claude Code) → PlayerCoglet (GitLet) → PolicyCoglet (CodeLet + LLM brain)
+Coach (Claude Code) → PlayerCoglet (GitLet) → PolicyCoglet (ProgLet + LLM brain)
 
 ### Key Commands
 
