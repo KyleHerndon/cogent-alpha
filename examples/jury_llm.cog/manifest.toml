@@ -1,0 +1,6 @@
+[coglet]
+class = "jury_llm.JuryCoglet"
+
+[coglet.kwargs]
+num_jurors = 5
+question = "Is the earth flat?"

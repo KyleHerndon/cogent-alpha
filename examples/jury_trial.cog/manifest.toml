@@ -1,0 +1,6 @@
+[coglet]
+class = "trial.TrialCoglet"
+
+[coglet.kwargs]
+motion = "AI code generation tools should replace manual code review"
+num_jurors = 7

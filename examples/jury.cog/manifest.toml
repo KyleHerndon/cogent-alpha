@@ -1,0 +1,6 @@
+[coglet]
+class = "jury.JuryCoglet"
+
+[coglet.kwargs]
+num_jurors = 5
+question = "Should we adopt microservices over a monolith for a 3-person startup?"

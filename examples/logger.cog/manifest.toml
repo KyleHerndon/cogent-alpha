@@ -1,0 +1,2 @@
+[coglet]
+class = "logger.SupervisorCoglet"

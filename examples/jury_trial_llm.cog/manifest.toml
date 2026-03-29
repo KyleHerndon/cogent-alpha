@@ -1,0 +1,6 @@
+[coglet]
+class = "trial_llm.TrialCoglet"
+
+[coglet.kwargs]
+motion = "Is the earth flat?"
+num_jurors = 5

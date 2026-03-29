@@ -1,0 +1,2 @@
+[coglet]
+class = "fanout.AggregatorCoglet"
