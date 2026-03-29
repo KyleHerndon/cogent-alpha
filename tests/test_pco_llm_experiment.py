@@ -291,7 +291,7 @@ def run_solution(puzzle: dict, code: str) -> dict:
         }
 
     passed_tests = 0
-    first_error = None
+    errors = []
     for test_case in puzzle["tests"]:
         *inputs, expected = test_case
         test_input = inputs[0] if len(inputs) == 1 else tuple(inputs)
@@ -299,18 +299,18 @@ def run_solution(puzzle: dict, code: str) -> dict:
             result = fn(*inputs) if len(inputs) > 1 else fn(inputs[0])
             if result == expected:
                 passed_tests += 1
-            elif first_error is None:
-                first_error = f"input={test_input!r}: got {result!r}, expected {expected!r}"
+            else:
+                errors.append(f"input={test_input!r}: got {result!r}, expected {expected!r}")
         except Exception as e:
-            if first_error is None:
-                first_error = f"input={test_input!r}: raised {type(e).__name__}: {e}"
+            errors.append(f"input={test_input!r}: raised {type(e).__name__}: {e}")
 
     return {
         "name": puzzle["name"],
         "passed": passed_tests == len(puzzle["tests"]),
         "total_tests": len(puzzle["tests"]),
         "passed_tests": passed_tests,
-        "error": first_error,
+        "error": "; ".join(errors) if errors else None,
+        "all_errors": errors,
     }
 
 
@@ -418,19 +418,31 @@ class CodeReviewCritic(Coglet):
         for r in results:
             p = next((p for p in self.puzzles if p["name"] == r["name"]), None)
             desc = p["description"] if p else ""
+            # Show puzzle spec + sample test cases so critic can mentally run the code
+            test_examples = ""
+            if p and p.get("tests"):
+                samples = p["tests"][:3]
+                for tc in samples:
+                    *inputs, expected = tc
+                    inp = inputs[0] if len(inputs) == 1 else tuple(inputs)
+                    test_examples += f"  {inp!r} → {expected!r}\n"
             solution_texts.append(
-                f"### {r['name']}\nDescription: {desc}\n```python\n{r['code']}\n```"
+                f"### {r['name']}\n"
+                f"Description: {desc}\n"
+                f"Test cases:\n{test_examples}"
+                f"```python\n{r['code']}\n```"
             )
 
         prompt = (
             f"Your evaluation strategy: {self.strategy}\n\n"
-            "For each solution below, predict whether it will PASS or FAIL all test cases. "
+            "For each solution below, mentally trace through the test cases and predict "
+            "whether it will PASS or FAIL ALL test cases. A single failing test means FAIL. "
             "Return a JSON object mapping puzzle name to 'pass' or 'fail'. "
             "Return ONLY the JSON object.\n\n"
             + "\n\n".join(solution_texts)
         )
 
-        response = llm_call(prompt, system="You are a code reviewer predicting test outcomes.")
+        response = llm_call(prompt, system="You are a meticulous code reviewer. Trace each test case through the code step by step.", max_tokens=8192)
         try:
             predictions = extract_json(response)
         except (json.JSONDecodeError, ValueError):
@@ -500,11 +512,36 @@ class MaxRewritesConstraint(ConstraintCoglet):
 
 
 class CodeGenLearner(LearnerCoglet):
-    """Learner that rewrites failing solutions and updates critic strategy."""
+    """Learner with memory: tracks all previous attempts per puzzle.
+
+    Each epoch appends to a per-puzzle log of (code, error) pairs.
+    The full history is included in the fix prompt so the LLM doesn't
+    repeat the same broken approaches.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # puzzle_name → list of {"code": str, "error": str, "epoch": int}
+        self._history: dict[str, list[dict]] = {}
+        self._epoch = 0
 
     async def learn(self, experience, evaluation, signals):
+        self._epoch += 1
         actor_signal = next((s for s in signals if s.get("name") == "actor_loss"), None)
         critic_signal = next((s for s in signals if s.get("name") == "critic_loss"), None)
+
+        # Record all failures into history
+        if actor_signal and actor_signal.get("failed_puzzles"):
+            for f in actor_signal["failed_puzzles"]:
+                name = f["name"]
+                self._history.setdefault(name, [])
+                # Don't log duplicates (same code)
+                if not self._history[name] or self._history[name][-1]["code"] != f["code"]:
+                    self._history[name].append({
+                        "code": f["code"],
+                        "error": f["error"],
+                        "epoch": self._epoch,
+                    })
 
         new_solutions = {}
         new_critic_strategy = None
@@ -517,16 +554,41 @@ class CodeGenLearner(LearnerCoglet):
             fix_parts = []
             for f in failed:
                 puzzle = puzzle_map.get(f["name"], {})
-                fix_parts.append(
+                # Include test cases so the LLM knows exact expected behavior
+                test_lines = ""
+                if puzzle.get("tests"):
+                    for tc in puzzle["tests"]:
+                        *inputs, expected = tc
+                        inp = inputs[0] if len(inputs) == 1 else tuple(inputs)
+                        test_lines += f"  assert fn({inp!r}) == {expected!r}\n"
+                part = (
                     f"### {f['name']}\n"
                     f"Description: {puzzle.get('description', 'N/A')}\n"
                     f"Signature: {puzzle.get('signature', 'N/A')}\n"
+                    f"Test cases:\n{test_lines}\n"
                     f"Current code:\n```python\n{f['code']}\n```\n"
-                    f"Error: {f['error']}"
+                    f"Errors: {f['error']}\n"
                 )
+
+                # Add history of previous failed attempts
+                history = self._history.get(f["name"], [])
+                if len(history) > 1:
+                    part += "\nPREVIOUS FAILED ATTEMPTS (do NOT repeat these approaches):\n"
+                    # Show last 5 attempts to keep prompt bounded
+                    for prev in history[-5:]:
+                        part += (
+                            f"- Epoch {prev['epoch']}:\n"
+                            f"  ```python\n  {prev['code'][:300]}{'...' if len(prev['code']) > 300 else ''}\n  ```\n"
+                            f"  Error: {prev['error']}\n"
+                        )
+                    part += "\nYou MUST try a fundamentally different approach than the ones above.\n"
+
+                fix_parts.append(part)
 
             prompt = (
                 "Fix these failing Python solutions. For each, return the corrected complete function. "
+                "IMPORTANT: If previous attempts are listed, you MUST try a different algorithm or approach. "
+                "Do not make minor tweaks to code that has already failed — rethink the solution.\n"
                 "Return a JSON object mapping puzzle name to the fixed Python code string. "
                 "Return ONLY the JSON object.\n\n"
                 + "\n\n".join(fix_parts)
@@ -538,7 +600,7 @@ class CodeGenLearner(LearnerCoglet):
             except (json.JSONDecodeError, ValueError):
                 pass
 
-        # Update critic strategy
+        # Update critic strategy — append insights rather than replace
         if critic_signal and critic_signal.get("wrong_predictions"):
             wrong = critic_signal["wrong_predictions"]
             wrong_parts = []
@@ -548,15 +610,23 @@ class CodeGenLearner(LearnerCoglet):
                     + (f" (error: {w['error']})" if w.get("error") else "")
                 )
 
+            # Get the current strategy from the evaluation context
+            current_strategy = ""
+            if evaluation and "predictions" in evaluation:
+                # The critic's strategy is passed through indirectly
+                current_strategy = getattr(self, "_last_critic_strategy", "")
+
             prompt = (
-                "You are a code review critic. Your predictions were wrong for these puzzles:\n"
+                f"You are a code review critic. Current strategy:\n{current_strategy}\n\n"
+                "Your predictions were wrong for these puzzles:\n"
                 + "\n".join(wrong_parts)
-                + "\n\nWrite an improved evaluation strategy (1-3 sentences) that would help you "
-                "predict more accurately next time. Focus on specific patterns you missed."
+                + "\n\nWrite an IMPROVED evaluation strategy that ADDS specific new checks to your existing approach. "
+                "Keep what works, add what's missing. 2-4 sentences total."
                 "\n\nReturn ONLY the strategy text, no JSON or markdown."
             )
 
-            new_critic_strategy = llm_call(prompt, max_tokens=200)
+            new_critic_strategy = llm_call(prompt, max_tokens=300)
+            self._last_critic_strategy = new_critic_strategy
 
         return {
             "solutions": new_solutions,
