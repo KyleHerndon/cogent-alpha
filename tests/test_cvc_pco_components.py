@@ -4,7 +4,7 @@ import asyncio
 from dataclasses import dataclass
 
 import pytest
-from coglet import CogletConfig, CogletRuntime
+from coglet import CogBase, CogletRuntime
 
 from cvc.critic import CvCCritic
 from cvc.losses import ResourceLoss, JunctionLoss, SurvivalLoss
@@ -49,7 +49,7 @@ class TestCvCCritic:
     @pytest.mark.asyncio
     async def test_evaluate_total_resources(self):
         runtime = CogletRuntime()
-        handle = await runtime.spawn(CogletConfig(cls=CvCCritic))
+        handle = await runtime.spawn(CogBase(cls=CvCCritic))
         critic = handle.coglet
 
         evaluations = []
@@ -70,7 +70,7 @@ class TestCvCCritic:
     @pytest.mark.asyncio
     async def test_evaluate_junction_control(self):
         runtime = CogletRuntime()
-        handle = await runtime.spawn(CogletConfig(cls=CvCCritic))
+        handle = await runtime.spawn(CogBase(cls=CvCCritic))
         critic = handle.coglet
 
         evaluations = []
@@ -91,7 +91,7 @@ class TestCvCCritic:
     @pytest.mark.asyncio
     async def test_evaluate_deaths(self):
         runtime = CogletRuntime()
-        handle = await runtime.spawn(CogletConfig(cls=CvCCritic))
+        handle = await runtime.spawn(CogBase(cls=CvCCritic))
         critic = handle.coglet
 
         evaluations = []
@@ -112,7 +112,7 @@ class TestCvCCritic:
     @pytest.mark.asyncio
     async def test_evaluate_final_hp(self):
         runtime = CogletRuntime()
-        handle = await runtime.spawn(CogletConfig(cls=CvCCritic))
+        handle = await runtime.spawn(CogBase(cls=CvCCritic))
         critic = handle.coglet
 
         evaluations = []
@@ -133,7 +133,7 @@ class TestCvCCritic:
     async def test_update_is_noop(self):
         """The update channel must not raise or produce output."""
         runtime = CogletRuntime()
-        handle = await runtime.spawn(CogletConfig(cls=CvCCritic))
+        handle = await runtime.spawn(CogBase(cls=CvCCritic))
         critic = handle.coglet
         await critic._dispatch_listen("update", {"some": "patch"})
         await runtime.shutdown()
@@ -148,7 +148,7 @@ class TestResourceLoss:
     @pytest.mark.asyncio
     async def test_high_resources_low_loss(self):
         runtime = CogletRuntime()
-        handle = await runtime.spawn(CogletConfig(cls=ResourceLoss))
+        handle = await runtime.spawn(CogBase(cls=ResourceLoss))
         coglet = handle.coglet
 
         signals = []
@@ -170,7 +170,7 @@ class TestResourceLoss:
     @pytest.mark.asyncio
     async def test_over_100_resources_zero_loss(self):
         runtime = CogletRuntime()
-        handle = await runtime.spawn(CogletConfig(cls=ResourceLoss))
+        handle = await runtime.spawn(CogBase(cls=ResourceLoss))
         coglet = handle.coglet
 
         signals = []
@@ -194,7 +194,7 @@ class TestJunctionLoss:
     @pytest.mark.asyncio
     async def test_positive_control_zero_loss(self):
         runtime = CogletRuntime()
-        handle = await runtime.spawn(CogletConfig(cls=JunctionLoss))
+        handle = await runtime.spawn(CogBase(cls=JunctionLoss))
         coglet = handle.coglet
 
         signals = []
@@ -216,7 +216,7 @@ class TestJunctionLoss:
     @pytest.mark.asyncio
     async def test_negative_control_positive_loss(self):
         runtime = CogletRuntime()
-        handle = await runtime.spawn(CogletConfig(cls=JunctionLoss))
+        handle = await runtime.spawn(CogBase(cls=JunctionLoss))
         coglet = handle.coglet
 
         signals = []
@@ -240,7 +240,7 @@ class TestSurvivalLoss:
     @pytest.mark.asyncio
     async def test_deaths_magnitude(self):
         runtime = CogletRuntime()
-        handle = await runtime.spawn(CogletConfig(cls=SurvivalLoss))
+        handle = await runtime.spawn(CogBase(cls=SurvivalLoss))
         coglet = handle.coglet
 
         signals = []
@@ -269,7 +269,7 @@ class TestSyntaxConstraint:
     @pytest.mark.asyncio
     async def test_accepts_valid_python(self):
         runtime = CogletRuntime()
-        handle = await runtime.spawn(CogletConfig(cls=SyntaxConstraint))
+        handle = await runtime.spawn(CogBase(cls=SyntaxConstraint))
         coglet = handle.coglet
 
         verdicts = []
@@ -291,7 +291,7 @@ class TestSyntaxConstraint:
     @pytest.mark.asyncio
     async def test_rejects_invalid_python(self):
         runtime = CogletRuntime()
-        handle = await runtime.spawn(CogletConfig(cls=SyntaxConstraint))
+        handle = await runtime.spawn(CogBase(cls=SyntaxConstraint))
         coglet = handle.coglet
 
         verdicts = []
@@ -314,7 +314,7 @@ class TestSyntaxConstraint:
     @pytest.mark.asyncio
     async def test_ignores_non_program_values(self):
         runtime = CogletRuntime()
-        handle = await runtime.spawn(CogletConfig(cls=SyntaxConstraint))
+        handle = await runtime.spawn(CogBase(cls=SyntaxConstraint))
         coglet = handle.coglet
 
         verdicts = []
@@ -339,7 +339,7 @@ class TestSafetyConstraint:
     @pytest.mark.asyncio
     async def test_accepts_safe_code(self):
         runtime = CogletRuntime()
-        handle = await runtime.spawn(CogletConfig(cls=SafetyConstraint))
+        handle = await runtime.spawn(CogBase(cls=SafetyConstraint))
         coglet = handle.coglet
 
         verdicts = []
@@ -361,7 +361,7 @@ class TestSafetyConstraint:
     @pytest.mark.asyncio
     async def test_rejects_eval(self):
         runtime = CogletRuntime()
-        handle = await runtime.spawn(CogletConfig(cls=SafetyConstraint))
+        handle = await runtime.spawn(CogBase(cls=SafetyConstraint))
         coglet = handle.coglet
 
         verdicts = []
@@ -384,7 +384,7 @@ class TestSafetyConstraint:
     @pytest.mark.asyncio
     async def test_rejects_exec(self):
         runtime = CogletRuntime()
-        handle = await runtime.spawn(CogletConfig(cls=SafetyConstraint))
+        handle = await runtime.spawn(CogBase(cls=SafetyConstraint))
         coglet = handle.coglet
 
         verdicts = []
@@ -406,7 +406,7 @@ class TestSafetyConstraint:
     @pytest.mark.asyncio
     async def test_rejects_import_os(self):
         runtime = CogletRuntime()
-        handle = await runtime.spawn(CogletConfig(cls=SafetyConstraint))
+        handle = await runtime.spawn(CogBase(cls=SafetyConstraint))
         coglet = handle.coglet
 
         verdicts = []
@@ -428,7 +428,7 @@ class TestSafetyConstraint:
     @pytest.mark.asyncio
     async def test_rejects_open(self):
         runtime = CogletRuntime()
-        handle = await runtime.spawn(CogletConfig(cls=SafetyConstraint))
+        handle = await runtime.spawn(CogBase(cls=SafetyConstraint))
         coglet = handle.coglet
 
         verdicts = []
@@ -450,7 +450,7 @@ class TestSafetyConstraint:
     @pytest.mark.asyncio
     async def test_rejects_dunder_import(self):
         runtime = CogletRuntime()
-        handle = await runtime.spawn(CogletConfig(cls=SafetyConstraint))
+        handle = await runtime.spawn(CogBase(cls=SafetyConstraint))
         coglet = handle.coglet
 
         verdicts = []

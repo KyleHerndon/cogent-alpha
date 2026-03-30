@@ -5,7 +5,7 @@ import json
 
 import pytest
 
-from coglet import Coglet, CogletConfig, CogletRuntime, LifeLet
+from coglet import Coglet, CogBase, CogletRuntime, LifeLet
 from coglet.weblet import CogWebRegistry, WebLet
 from cogweb.ui.server import CogWebUI, _STATIC_DIR
 
@@ -113,7 +113,7 @@ async def test_runtime_integration():
     """Full pipeline: runtime → WebLet → registry → UI snapshot."""
     reg = CogWebRegistry()
     rt = CogletRuntime()
-    handle = await rt.spawn(CogletConfig(cls=WebNode, kwargs={"cogweb": reg}))
+    handle = await rt.spawn(CogBase(cls=WebNode, kwargs={"cogweb": reg}))
 
     ui = CogWebUI(reg)
     app = ui._build_app()

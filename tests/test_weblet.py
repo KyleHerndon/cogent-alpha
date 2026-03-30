@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from coglet import Coglet, CogletConfig, CogletHandle, CogletRuntime, Command, LifeLet
+from coglet import Coglet, CogBase, CogletHandle, CogletRuntime, Command, LifeLet
 from coglet.weblet import CogWebNode, CogWebRegistry, WebLet, _node_id
 
 
@@ -28,7 +28,7 @@ class ParentNode(Coglet, WebLet, LifeLet):
 
     async def on_start(self):
         await super().on_start()
-        self._child_handle = await self.create(CogletConfig(
+        self._child_handle = await self.create(CogBase(
             cls=self._child_cls,
             kwargs={"cogweb": self._cogweb} if issubclass(self._child_cls, WebLet) else {},
         ))
@@ -109,7 +109,7 @@ def test_snapshot_reflects_live_state():
 async def test_weblet_registers_on_start():
     reg = CogWebRegistry()
     rt = CogletRuntime()
-    handle = await rt.spawn(CogletConfig(cls=WebNode, kwargs={"cogweb": reg}))
+    handle = await rt.spawn(CogBase(cls=WebNode, kwargs={"cogweb": reg}))
     assert len(reg.node_ids) == 1
     node = reg.snapshot().nodes[reg.node_ids[0]]
     assert node.class_name == "WebNode"
@@ -123,7 +123,7 @@ async def test_weblet_registers_on_start():
 async def test_weblet_deregisters_on_stop():
     reg = CogWebRegistry()
     rt = CogletRuntime()
-    await rt.spawn(CogletConfig(cls=WebNode, kwargs={"cogweb": reg}))
+    await rt.spawn(CogBase(cls=WebNode, kwargs={"cogweb": reg}))
     assert len(reg.node_ids) == 1
     await rt.shutdown()
     assert len(reg.node_ids) == 0
@@ -133,7 +133,7 @@ async def test_weblet_deregisters_on_stop():
 async def test_weblet_without_registry_is_noop():
     """WebLet without cogweb kwarg should work fine (inert)."""
     rt = CogletRuntime()
-    handle = await rt.spawn(CogletConfig(cls=WebNode))
+    handle = await rt.spawn(CogBase(cls=WebNode))
     assert handle.coglet._cogweb is None
     await rt.shutdown()
 
@@ -142,7 +142,7 @@ async def test_weblet_without_registry_is_noop():
 async def test_weblet_tracks_children():
     reg = CogWebRegistry()
     rt = CogletRuntime()
-    handle = await rt.spawn(CogletConfig(
+    handle = await rt.spawn(CogBase(
         cls=ParentNode,
         kwargs={"cogweb": reg},
     ))
@@ -159,7 +159,7 @@ async def test_weblet_parent_child_edges():
     """When both parent and child are WebLet, both register and edge exists."""
     reg = CogWebRegistry()
     rt = CogletRuntime()
-    handle = await rt.spawn(CogletConfig(
+    handle = await rt.spawn(CogBase(
         cls=ParentNode,
         kwargs={"cogweb": reg, "child_cls": WebChild},
     ))
@@ -186,7 +186,7 @@ async def test_weblet_includes_listen_and_enact():
 
     reg = CogWebRegistry()
     rt = CogletRuntime()
-    await rt.spawn(CogletConfig(cls=InstrumentedNode, kwargs={"cogweb": reg}))
+    await rt.spawn(CogBase(cls=InstrumentedNode, kwargs={"cogweb": reg}))
     snap = reg.snapshot()
     node = list(snap.nodes.values())[0]
     assert "obs" in node.listen_channels
@@ -199,7 +199,7 @@ async def test_weblet_includes_listen_and_enact():
 async def test_weblet_config_from_runtime():
     reg = CogWebRegistry()
     rt = CogletRuntime()
-    await rt.spawn(CogletConfig(
+    await rt.spawn(CogBase(
         cls=WebNode,
         kwargs={"cogweb": reg},
         restart="on_error",
@@ -218,7 +218,7 @@ async def test_weblet_config_from_runtime():
 async def test_weblet_status_enact():
     reg = CogWebRegistry()
     rt = CogletRuntime()
-    handle = await rt.spawn(CogletConfig(cls=WebNode, kwargs={"cogweb": reg}))
+    handle = await rt.spawn(CogBase(cls=WebNode, kwargs={"cogweb": reg}))
     await handle.coglet._dispatch_enact(Command("cogweb_status", "error"))
     snap = reg.snapshot()
     node = list(snap.nodes.values())[0]

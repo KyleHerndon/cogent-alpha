@@ -1,0 +1,5 @@
+[coglet]
+class = "counter.CounterCoglet"
+
+[coglet.kwargs]
+interval = 1

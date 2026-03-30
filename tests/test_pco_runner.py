@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from coglet import CogletConfig, CogletRuntime
+from coglet import CogBase, CogletRuntime
 from coglet.handle import Command
 from coglet.proglet import Program
 
@@ -24,7 +24,7 @@ async def test_experience_actor_transmits():
 
     runtime = CogletRuntime()
     handle = await runtime.spawn(
-        CogletConfig(
+        CogBase(
             cls=ExperienceActor,
             kwargs=dict(experience=experience),
         )

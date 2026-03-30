@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import Any
 
 from coglet.coglet import Coglet, enact
-from coglet.handle import CogletConfig, Command
+from coglet.handle import CogBase, Command
 from coglet.lifelet import LifeLet
 from coglet.pco.optimizer import ProximalCogletOptimizer
 from coglet.proglet import Program
@@ -73,14 +73,14 @@ async def run_pco_epoch(
 
     runtime = CogletRuntime()
     handle = await runtime.spawn(
-        CogletConfig(
+        CogBase(
             cls=ProximalCogletOptimizer,
             kwargs=dict(
-                actor_config=CogletConfig(
+                actor_config=CogBase(
                     cls=ExperienceActor,
                     kwargs=dict(experience=experience, programs=programs),
                 ),
-                critic_config=CogletConfig(cls=CvCCritic),
+                critic_config=CogBase(cls=CvCCritic),
                 losses=[ResourceLoss(), JunctionLoss(), SurvivalLoss()],
                 constraints=[SyntaxConstraint(), SafetyConstraint()],
                 learner=learner,

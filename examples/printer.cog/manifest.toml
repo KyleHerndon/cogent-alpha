@@ -1,0 +1,5 @@
+[coglet]
+class = "printer.PrinterCoglet"
+
+[coglet.kwargs]
+label = "output"

@@ -7,11 +7,11 @@ graph always reflects current state (children, channels, etc.).
 Usage:
     class MyNode(Coglet, WebLet, LifeLet):
         async def on_start(self):
-            child = await self.create(CogletConfig(cls=Worker))
+            child = await self.create(CogBase(cls=Worker))
 
     registry = CogWebRegistry()
     rt = CogletRuntime()
-    handle = await rt.spawn(CogletConfig(cls=MyNode, kwargs={"cogweb": registry}))
+    handle = await rt.spawn(CogBase(cls=MyNode, kwargs={"cogweb": registry}))
     print(registry.snapshot().to_dict())  # full graph for UI
 """
 from __future__ import annotations
@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from typing import Any, TYPE_CHECKING
 
 from coglet.coglet import enact
-from coglet.handle import CogletConfig, CogletHandle, Command
+from coglet.handle import CogBase, CogletHandle, Command
 
 if TYPE_CHECKING:
     from coglet.coglet import Coglet
