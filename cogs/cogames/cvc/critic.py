@@ -29,7 +29,7 @@ class CvCCritic(Coglet):
         """Compute evaluation metrics from a list of game snapshots."""
         total_resources = 0
         for snap in snapshots:
-            resources = snap.get("resources", {})
+            resources = snap.get("team_resources", snap.get("resources", {}))
             total_resources += sum(resources.values())
 
         junction_control = 0

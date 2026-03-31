@@ -150,7 +150,14 @@ def _desired_role(gs: Any) -> str:
 
 
 def _should_retreat(gs: Any) -> bool:
-    return gs.should_retreat()
+    if gs.should_retreat():
+        return True
+    # PCO: extra caution when low HP and far from hub
+    if gs.hp < 60:
+        hub = gs.nearest_hub()
+        if hub is not None and _h.manhattan(gs.position, hub.position) > 25:
+            return True
+    return False
 
 
 def _retreat(gs: Any) -> tuple[Action, str]:
@@ -182,6 +189,10 @@ def _summarize(gs: Any) -> dict:
     hp = gs.hp
     pos = gs.position
     hub = gs.nearest_hub()
+    team = _h.team_id(gs.mg_state) if gs.mg_state else ""
+    friendly_j = len(gs.known_junctions(lambda e: e.owner == team)) if team else 0
+    enemy_j = len(gs.known_junctions(lambda e: e.owner not in {None, "neutral", team})) if team else 0
+    neutral_j = len(gs.known_junctions(lambda e: e.owner in {None, "neutral"}))
     return {
         "step": gs.step_index,
         "agent_id": gs.agent_id,
@@ -191,6 +202,7 @@ def _summarize(gs: Any) -> dict:
         "resource_bias": gs.resource_bias,
         "team_resources": _team_resources(gs),
         "inventory": _inventory(gs),
+        "junctions": {"friendly": friendly_j, "enemy": enemy_j, "neutral": neutral_j},
         "safe_distance": 0 if hub is None else _h.manhattan(pos, hub.position),
         "stalled": _is_stalled(gs),
         "oscillating": _is_oscillating(gs),
