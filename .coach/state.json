@@ -1,25 +1,25 @@
 {
-  "last_session": "20260401-060000",
+  "last_session": "20260401-070000",
   "best_score": 8.84,
-  "total_sessions": 56,
+  "total_sessions": 57,
   "policy_name": "beta",
   "season": "beta-teams-tiny-fixed",
   "tournament_best": 8.84,
   "tournament_rank": 1,
   "tournament_top": 8.84,
-  "freeplay_best": 26.24,
+  "freeplay_best": 17.02,
   "freeplay_season": "beta-cvc",
-  "latest_submission": "beta:v93",
-  "freeplay_submission": "beta:v92",
-  "key_fix": "Mid-range scrambler explore offsets (25 before 36). Self-play +24.9% avg, 6/7 seeds improved.",
+  "latest_submission": "beta:v95",
+  "freeplay_submission": "beta:v94",
+  "key_fix": "Reachable-blocked scramble targeting (+49.0% self-play). Scramblers prioritize enemy junctions blocking our network-reachable neutrals.",
   "approach_stats": {
     "pco": {"attempts": 4, "improvements": 1, "last_used": "20260329-000000"},
-    "design": {"attempts": 28, "improvements": 18, "last_used": "20260401-060000"}
+    "design": {"attempts": 29, "improvements": 19, "last_used": "20260401-070000"}
   },
   "freeplay_experiments": {
+    "v94_reachable_blocked": {"score": "pending", "result": "pending"},
     "v92_scrambler_explore": {"score": "pending", "result": "pending"},
     "v88_expansion_cap_40": {"score": "pending", "result": "pending"},
-    "v86_unstick_8": {"score": 26.24, "result": "improvement"},
-    "best_v86": {"score": 26.24, "result": "current_best"}
+    "best_v84": {"score": 17.02, "result": "current_best"}
   }
 }

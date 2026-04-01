@@ -1,12 +1,11 @@
 # Coach TODO
 
 ## Current Priorities
+- [ ] Monitor v94 freeplay (reachable-blocked scramble targeting)
+- [ ] Monitor v95 tournament entry
 - [ ] Monitor v92 freeplay (scrambler explore offsets)
-- [ ] Monitor v93 tournament entry
 - [ ] Monitor v88 freeplay (expansion bonus cap 40)
-- [ ] Monitor tournament stage-3 results (beta:v83 most advanced)
 - [ ] Update IMPROVE.md constants: JUNCTION_ALIGN_DISTANCE=15 (not 3), JUNCTION_AOE_RANGE=10 (not 4)
-- [ ] Investigate programs.py dead code (_should_retreat extra logic never invoked)
 
 ## Improvement Ideas
 - [ ] Map topology analysis — understand wall patterns to improve exploration
@@ -54,6 +53,7 @@
 - Need 7+ seeds minimum for any signal in self-play
 
 ## Done
+- [x] (ID) Reachable-blocked scramble targeting — self-play +49.0%, submitted v94/v95
 - [x] (ID) Mid-range scrambler explore offsets (25 before 36) — self-play +24.9%, submitted v92/v93
 - [x] (ID) Expansion bonus cap 30→40 — self-play +16.4%, submitted v88/v89
 - [x] (ID) Faster unstick 12→8 steps — variance halved, min improved, submitted v86/v87
