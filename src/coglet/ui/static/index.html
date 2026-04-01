@@ -202,30 +202,34 @@ import {
 const BASE = location.pathname.replace(/\/ui$/, '');
 
 // ---- Resize hook ----
+// edge: which edge the handle sits on — determines drag direction
+//   'right'  → dragging right grows  (tree panel)
+//   'left'   → dragging left grows   (inspector panel)
+//   'top'    → dragging up grows     (bottom panel)
 
-function useResize(direction, initialSize, minSize = 100, maxSize = 600) {
+function usePanelResize(edge, initialSize, minSize = 100, maxSize = 600) {
   const [size, setSize] = useState(initialSize);
-  const dragging = useRef(false);
-  const startPos = useRef(0);
-  const startSize = useRef(0);
+  const ref = useRef({ dragging: false, startPos: 0, startSize: 0 });
 
   const onMouseDown = useCallback((e) => {
     e.preventDefault();
-    dragging.current = true;
-    startPos.current = direction === 'horizontal' ? e.clientX : e.clientY;
-    startSize.current = size;
-    document.body.style.cursor = direction === 'horizontal' ? 'col-resize' : 'row-resize';
+    const r = ref.current;
+    r.dragging = true;
+    r.startPos = (edge === 'top') ? e.clientY : e.clientX;
+    r.startSize = size;
+    const isVert = edge === 'top';
+    document.body.style.cursor = isVert ? 'row-resize' : 'col-resize';
     document.body.style.userSelect = 'none';
 
     const onMouseMove = (e) => {
-      if (!dragging.current) return;
-      const delta = direction === 'horizontal'
-        ? startPos.current - e.clientX
-        : startPos.current - e.clientY;
-      setSize(Math.min(maxSize, Math.max(minSize, startSize.current + delta)));
+      if (!r.dragging) return;
+      const pos = isVert ? e.clientY : e.clientX;
+      // right: pos > start = grow; left/top: pos < start = grow
+      const delta = edge === 'right' ? pos - r.startPos : r.startPos - pos;
+      setSize(Math.min(maxSize, Math.max(minSize, r.startSize + delta)));
     };
     const onMouseUp = () => {
-      dragging.current = false;
+      r.dragging = false;
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
       window.removeEventListener('mousemove', onMouseMove);
@@ -233,42 +237,7 @@ function useResize(direction, initialSize, minSize = 100, maxSize = 600) {
     };
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
-  }, [size, direction, minSize, maxSize]);
-
-  return [size, onMouseDown];
-}
-
-function useResizeInverse(direction, initialSize, minSize = 100, maxSize = 600) {
-  const [size, setSize] = useState(initialSize);
-  const dragging = useRef(false);
-  const startPos = useRef(0);
-  const startSize = useRef(0);
-
-  const onMouseDown = useCallback((e) => {
-    e.preventDefault();
-    dragging.current = true;
-    startPos.current = direction === 'horizontal' ? e.clientX : e.clientY;
-    startSize.current = size;
-    document.body.style.cursor = direction === 'horizontal' ? 'col-resize' : 'row-resize';
-    document.body.style.userSelect = 'none';
-
-    const onMouseMove = (e) => {
-      if (!dragging.current) return;
-      const delta = direction === 'horizontal'
-        ? startPos.current - e.clientX
-        : e.clientY - startPos.current;
-      setSize(Math.min(maxSize, Math.max(minSize, startSize.current + delta)));
-    };
-    const onMouseUp = () => {
-      dragging.current = false;
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
-    };
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
-  }, [size, direction, minSize, maxSize]);
+  }, [size, edge, minSize, maxSize]);
 
   return [size, onMouseDown];
 }
@@ -919,9 +888,9 @@ function App() {
   const [channelView, setChannelView] = useState(null); // {nodeId, channel}
   const [programView, setProgramView] = useState(null); // {nodeId, name, data}
   const [connected, setConnected] = useState(false);
-  const [treeWidth, onTreeResize] = useResize('horizontal', 220, 120, 500);
-  const [inspWidth, onInspResize] = useResizeInverse('horizontal', 280, 150, 500);
-  const [bottomHeight, onBottomResize] = useResize('vertical', 250, 100, 500);
+  const [treeWidth, onTreeResize] = usePanelResize('right', 220, 120, 500);
+  const [inspWidth, onInspResize] = usePanelResize('left', 280, 150, 500);
+  const [bottomHeight, onBottomResize] = usePanelResize('top', 250, 100, 500);
   const [timeWindow, setTimeWindow] = useState(() => localStorage.getItem('coglet-tw') || '5s');
   const [expandedNodes, setExpandedNodes] = useState({});  // nodeId -> bool
   const [filter, setFilter] = useState({ root: null, mode: 'descendants' });

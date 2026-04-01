@@ -98,21 +98,13 @@ class ShowTrialCoglet(Coglet, LifeLet):
         self.link(generator, "output", trial, "input")
         # trial → reporter (verdicts)
         self.link(trial, "output", reporter, "input")
-        # trial → generator (verdicts back for timing)
-        self.link(trial, "output", generator, "input")
         # reporter → show (formatted records)
         self.link(reporter, "output", self.handle, "verdicts")
-        # generator → show (timing logs)
-        self.link(generator, "log", self.handle, "log")
 
         print(f"[show_trial] running — '{self.prompt}' [{self.executor_type}]")
 
         # Trigger first item now that links are set up
         await generator.coglet.generate()
-
-    @listen("log")
-    async def on_log(self, entry):
-        pass
 
     @listen("verdicts")
     async def on_verdicts(self, record):
