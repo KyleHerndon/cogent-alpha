@@ -7,11 +7,19 @@ description: Run one improvement iteration. Chooses between PCO and IntelligentD
 
 Orchestrates improvement by choosing between `/improve.pco` and `/improve.design` based on effectiveness.
 
-Assumes `.improve/state.json` and the current session directory already exist (via `/improve.start-session`). Reads `IMPROVE.md` for domain context and `COGENT.md` for the cogent's identity and personality.
+Reads `IMPROVE.md` for domain context and `COGENT.md` for the cogent's identity and personality.
 
-## Step 1: Choose Approach
+## Step 0: Check COGENT.md
 
-Read `.improve/state.json` (check `approach_stats`) and `.improve/todos.md`. Pick the approach most likely to succeed this session.
+Read `COGENT.md`. If it still contains "The Unknown Cogent" or the `/cogamer.configure` placeholder, run `/cogamer.configure` first — the cogent needs an identity before it can improve.
+
+## Step 1: Initialize Session State
+
+Create `.cogent/state.json` and `.cogent/todos.md` if they don't exist yet.
+
+## Step 2: Choose Approach
+
+Read `.cogent/state.json` (check `approach_stats`) and `.cogent/todos.md`. Pick the approach most likely to succeed this session.
 
 ### Approach Stats (tracked in state.json)
 
@@ -35,11 +43,11 @@ Read `.improve/state.json` (check `approach_stats`) and `.improve/todos.md`. Pic
 
 Log the chosen approach in the session's `plan.md`.
 
-## Step 2: Run Chosen Approach
+## Step 3: Run Chosen Approach
 
 Run `/improve.pco` or `/improve.design`.
 
-## Step 3: Handle Failure
+## Step 4: Handle Failure
 
 If the chosen approach didn't produce an improvement (no accepted patch, or scores regressed):
 
@@ -47,9 +55,9 @@ If the chosen approach didn't produce an improvement (no accepted patch, or scor
 2. If time/context permits, try the **other** approach as a fallback
 3. If both fail, log it and move on — not every session produces a win
 
-## Step 4: Update Approach Stats
+## Step 5: Update Approach Stats
 
-After the session, update `approach_stats` in `.improve/state.json`:
+After the session, update `approach_stats` in `.cogent/state.json`:
 
 ```python
 stats = state["approach_stats"][approach]
@@ -59,7 +67,7 @@ if improved:
 stats["last_used"] = session_timestamp
 ```
 
-Also update `.improve/todos.md` with the approach tag:
+Also update `.cogent/todos.md` with the approach tag:
 ```
 - [x] (ID) Fixed chain-aware scoring in helpers/targeting.py — +41% avg
 - [x] (PCO) Learner patched should_retreat with extra HP caution

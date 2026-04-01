@@ -17,7 +17,7 @@ Run eval from `IMPROVE.md` on seed 42 to establish baseline score.
 
 ### 2. Analyze
 
-Pick ONE focus area based on `IMPROVE.md` strategies, `.improve/todos.md`, and what hasn't been tried:
+Pick ONE focus area based on `IMPROVE.md` strategies, `.cogent/todos.md`, and what hasn't been tried:
 
 1. **Code review**: Read engine files (`agent/main.py`, `roles.py`, `targeting.py`, `pressure.py`). Look for bugs, inefficiencies, or gaps vs the alpha.0 reference in `IMPROVE.md`
 2. **Prompt review**: Read `_build_analysis_prompt()` and `_parse_analysis()` in `programs.py`. Is the LLM seeing the right info? Could it return more than just `resource_bias`? Could it detect stagnation like alpha.0 does?

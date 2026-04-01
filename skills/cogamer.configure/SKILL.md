@@ -5,7 +5,7 @@ description: Interactive setup for your cogent's identity. Asks questions to bui
 
 # Configure Cogent Identity
 
-Walk the user through setting up their cogent's personality in COGENT.md.
+Set up the cogent's personality in COGENT.md using plan mode for a smooth single-pass flow.
 
 ## Steps
 
@@ -13,17 +13,25 @@ Walk the user through setting up their cogent's personality in COGENT.md.
 
 Read `COGENT.md` to see if it's already configured or still the default placeholder.
 
-### 2. Ask Questions (one at a time)
+### 2. Present Plan with Questions
 
-Ask each question, wait for the answer, then move to the next. Keep the tone casual and fun.
+Enter plan mode and present all questions as a single plan for the user to answer. Keep the tone casual and fun.
 
-1. **Name**: "What's your cogent's name?" — This is the identity your agent carries into tournaments and freeplay. Can be anything.
+```
+Configure your cogent's identity:
 
-2. **Personality** (2-3 sentences): "Describe your cogent's personality in a few sentences. Are they aggressive? Cautious? Chaotic? Chill? Think of how they'd approach a game."
+1. **Name**: What's your cogent's name? This is the identity your agent carries into tournaments and freeplay.
 
-3. **Vibe / Motto**: "Give your cogent a motto or vibe — a one-liner that captures their energy." Examples: "Move fast, hold nothing", "Patience is a junction", "All your extractors are belong to us"
+2. **Personality**: Describe your cogent's personality in a few sentences. Aggressive? Cautious? Chaotic? Chill?
 
-4. **Strategy Philosophy** (optional): "Any strategic philosophy? e.g. 'defense wins games', 'rush early, scale late', 'adapt to everything'. Or skip this one."
+3. **Vibe / Motto**: A one-liner that captures their energy.
+   Examples: "Move fast, hold nothing", "Patience is a junction", "All your extractors are belong to us"
+
+4. **Strategy Philosophy** (optional, say "skip" to skip):
+   e.g. "defense wins games", "rush early, scale late", "adapt to everything"
+```
+
+Wait for the user to respond with all answers (they can answer inline, numbered, or however they like).
 
 ### 3. Write COGENT.md
 
