@@ -1,8 +1,10 @@
 # Coach TODO
 
 ## Current Priorities
-- [ ] Monitor tournament play-ins (v67-v85 all entered, v67-v73 scoring 8.84)
-- [ ] Monitor v84 freeplay (all 6 improvements combined)
+- [ ] Monitor v92 freeplay (scrambler explore offsets)
+- [ ] Monitor v93 tournament entry
+- [ ] Monitor v88 freeplay (expansion bonus cap 40)
+- [ ] Monitor tournament stage-3 results (beta:v83 most advanced)
 - [ ] Update IMPROVE.md constants: JUNCTION_ALIGN_DISTANCE=15 (not 3), JUNCTION_AOE_RANGE=10 (not 4)
 - [ ] Investigate programs.py dead code (_should_retreat extra logic never invoked)
 
@@ -52,6 +54,7 @@
 - Need 7+ seeds minimum for any signal in self-play
 
 ## Done
+- [x] (ID) Mid-range scrambler explore offsets (25 before 36) — self-play +24.9%, submitted v92/v93
 - [x] (ID) Expansion bonus cap 30→40 — self-play +16.4%, submitted v88/v89
 - [x] (ID) Faster unstick 12→8 steps — variance halved, min improved, submitted v86/v87
 - [x] (ID) Scramble blocked_neutrals weight 4.0→6.0 — self-play neutral, submitted v84/v85

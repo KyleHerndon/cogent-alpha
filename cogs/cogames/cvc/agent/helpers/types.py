@@ -30,7 +30,16 @@ _ALIGNER_EXPLORE_OFFSETS = (
     (-16, -16),
 )
 _MINER_EXPLORE_OFFSETS = ((-28, -28), (28, -28), (-28, 28), (28, 28))
-_SCRAMBLER_EXPLORE_OFFSETS = ((36, -36), (36, 36), (-36, 36), (-36, -36))
+_SCRAMBLER_EXPLORE_OFFSETS = (
+    (25, -25),
+    (-25, 25),
+    (25, 25),
+    (-25, -25),
+    (36, -36),
+    (36, 36),
+    (-36, 36),
+    (-36, -36),
+)
 
 _ELEMENTS = ("carbon", "oxygen", "germanium", "silicon")
 _HP_THRESHOLDS = COGSGUARD_ROLE_HP_THRESHOLDS
