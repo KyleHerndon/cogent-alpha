@@ -1,5 +1,0 @@
-[coglet]
-class = "trial.TrialCoglet"
-
-[coglet.kwargs]
-num_jurors = 5

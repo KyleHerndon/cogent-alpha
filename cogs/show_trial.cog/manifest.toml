@@ -1,8 +1,0 @@
-[coglet]
-class = "show_trial.ShowTrialCoglet"
-
-[coglet.kwargs]
-prompt = "interesting questions about AI"
-num_jurors = 5
-interval_s = 30
-executor = "code"  # "code" for deterministic, "llm" for LLM-based

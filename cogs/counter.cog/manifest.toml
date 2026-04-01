@@ -1,7 +1,0 @@
-[coglet]
-class = "counter.CounterCoglet"
-
-[coglet.kwargs]
-start = 0
-end = 1000
-interval_s = 1

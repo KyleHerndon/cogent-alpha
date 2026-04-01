@@ -1,6 +1,0 @@
-[coglet]
-class = "jury_llm.JuryCoglet"
-
-[coglet.kwargs]
-num_jurors = 5
-question = "Should programming languages enforce strict typing by default?"

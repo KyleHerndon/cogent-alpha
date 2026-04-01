@@ -1,6 +1,0 @@
-[coglet]
-class = "trial_llm.TrialCoglet"
-
-[coglet.kwargs]
-motion = "Social media has done more harm than good for society"
-num_jurors = 5
