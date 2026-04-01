@@ -40,13 +40,13 @@ ANTHROPIC_API_KEY= PYTHONPATH=src/cogamer cogames play -m machina_1 \
 
 ### 2. Freeplay (`beta-cvc`)
 
-Upload to freeplay to test against real opponents without tournament stakes:
+Upload to freeplay to test against real opponents without tournament stakes. Use the cogent name from `COGENT.md` (the `# heading`) as the policy name (`-n`):
 
 ```bash
 source .venv/bin/activate
-PYTHONPATH=src/cogamer cogames upload \
+cd src/cogamer && PYTHONPATH=. cogames upload \
   -p class=cvc.cvc_policy.CvCPolicy \
-  -n beta \
+  -n <cogent-name> \
   -f cvc -f mettagrid_sdk -f setup_policy.py \
   --setup-script setup_policy.py \
   --season beta-cvc \
@@ -64,12 +64,12 @@ Freeplay policies qualify via self-play, then play 20 matches against random par
 
 ### 3. Win Tournaments (`beta-teams-tiny-fixed`)
 
-Submit proven improvements to the ranked tournament:
+Submit proven improvements to the ranked tournament. Use the cogent name from `COGENT.md` as the policy name:
 
 ```bash
-PYTHONPATH=src/cogamer cogames upload \
+cd src/cogamer && PYTHONPATH=. cogames upload \
   -p class=cvc.cvc_policy.CvCPolicy \
-  -n beta \
+  -n <cogent-name> \
   -f cvc -f mettagrid_sdk -f setup_policy.py \
   --setup-script setup_policy.py \
   --season beta-teams-tiny-fixed \

@@ -191,6 +191,8 @@ class PressureMixin:
         team = _h.team_id(state)
         if self._in_enemy_aoe(state, current_pos, team_id=team):
             margin += 10
+        elif self._near_enemy_territory(state, current_pos, team_id=team):
+            margin += 5
         margin += int(state.self_state.inventory.get("heart", 0)) * 5
         margin += min(_h.resource_total(state), 12) // 2
         if not _h.has_role_gear(state, role):

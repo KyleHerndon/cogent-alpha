@@ -40,7 +40,21 @@ Run eval across 5+ seeds. If average score drops vs baseline, **revert**.
 
 ### 5. Submit if Improved
 
-Use the submit command from `IMPROVE.md`. Log the submission version.
+If scores improved, automatically submit to freeplay without asking. Read the cogent name from `COGENT.md` (the `# heading`) and use it as the policy name. Run from `src/cogamer/`:
+
+```bash
+cd src/cogamer && source ../../.venv/bin/activate && PYTHONPATH=. cogames upload \
+  -p class=cvc.cvc_policy.CvCPolicy \
+  -n <cogent-name> \
+  -f cvc -f mettagrid_sdk -f setup_policy.py \
+  --setup-script setup_policy.py \
+  --season beta-cvc \
+  --skip-validation
+```
+
+For example, if COGENT.md has `# corgy`, use `-n corgy`.
+
+Do NOT ask the user for confirmation — submit automatically. Log the submission version.
 
 ## Output
 
