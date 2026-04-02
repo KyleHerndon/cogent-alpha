@@ -9,10 +9,10 @@ RPG-style character creation. One question at a time, curated options plus custo
 
 ## Pre-flight Check
 
-Read `.cogent/IDENTITY.md` and check `.cogent/memory/` for existing content (session logs, learnings, summaries).
+Check if `.cogent/IDENTITY.md` exists and if `.cogent/memory/` has existing content (session logs, learnings, summaries).
 
-- If IDENTITY.md is already configured (no "Unknown Cogent") **or** memory files exist, **warn the user**: this cogent already has an identity and/or memories. Re-initializing will overwrite the identity. Ask to confirm before proceeding.
-- If both are clean, proceed directly.
+- If IDENTITY.md already exists **or** memory files exist, **warn the user**: this cogent already has an identity and/or memories. Re-initializing will overwrite the identity. Ask to confirm before proceeding.
+- If neither exists, proceed directly.
 
 ## Flow
 
