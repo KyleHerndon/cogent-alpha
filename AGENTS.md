@@ -1,6 +1,18 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Instructions for AI agents working with this repository.
+
+## Cogent Lifecycle
+
+Every session should start with `/wakeup` and end with `/sleep`.
+
+- **`/wakeup`** — Restores the cogent from `.cogent/` state. Reads identity, memory, todos, and tournament standing. Reports status and waits for direction.
+- **`/sleep`** — Persists session state. Writes session logs, updates learnings and todos, commits and pushes `.cogent/`.
+- **`/initialize`** — First-time setup. Creates `.cogent/IDENTITY.md` via RPG-style character creation. Required before any other skill works.
+- **`/improve`** — One improvement iteration: analyze code, implement a change, test across seeds, auto-submit if improved.
+- **`/proximal-cogent-optimize`** — PCO cycle: play a game, collect experience, LLM proposes patches, test, submit.
+- **`/dashboard`** — Generate HTML dashboard from `.cogent/` state showing experiments, scores, and learnings.
+- **`/memory-wipe`** — Nuclear reset of memory and state. Identity survives.
 
 ## Related Repos
 
@@ -16,8 +28,6 @@ src/cogweb/     # CogWeb: graph visualization UI (FastAPI + WebSocket + SVG)
 tests/          # 200 unit + integration tests (pytest + pytest-asyncio)
 docs/           # Architecture design docs
 ```
-
-See [AGENTS.md](AGENTS.md) for detailed component reference and patterns.
 
 ## Architecture
 
@@ -61,7 +71,6 @@ PYTHONPATH=src/cogamer python -m pytest tests/ -v
 
 ### Docs
 
-- [AGENTS.md](AGENTS.md) — Component reference for AI agents working with this codebase
 - [README.md](README.md) — Project overview and quickstart
 - [docs/rules.md](docs/rules.md) — Game rules, constants, team coordination
 - [docs/architecture.md](docs/architecture.md) — Policy architecture, program table, PCO, alpha.0 reference
