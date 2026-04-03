@@ -121,6 +121,8 @@ cvc/
     ├── targeting.py           # Target selection, claims, sticky targets
     ├── pressure.py            # Role budgets, retreat (delegates to budgets.py)
     ├── junctions.py           # Junction memory, depot lookup
+    ├── tick_context.py        # TickContext (per-tick read-only state) + builder
+    ├── decisions.py           # Decision pipeline: composable check functions
     ├── budgets.py             # Pure functions: assign_role, pressure budgets, retreat margin
     ├── pathfinding.py         # Pure functions: A* search, oscillation detection
     ├── world_model.py         # WorldModel (per-agent entity memory)
@@ -157,17 +159,21 @@ The LLM never picks individual actions — Python handles all real-time decision
 ### PCO Learning (Between Episodes)
 `CvCLearner` uses an LLM to propose patches to the program table based on loss signals from evaluation. It can modify any program's Python source or the `analyze` prompt itself. Patches are compiled via `exec()`, validated by constraints, and swapped in for the next episode.
 
-### Heuristic Engine Decision Tree
+### Decision Pipeline (`decisions.py`)
+The decision tree is a composable pipeline of check functions. Each check takes `(TickContext, role, engine)` and returns `(Action, summary)` or `None`. First non-None wins:
 ```
-1. retreat? (low HP → move to hub)
-2. regear? (no gear → craft at hub)
-3. deposit? (miner carrying resources → deposit at hub)
-4. role action:
-   - miner: find extractor → mine → deposit
-   - aligner: acquire hearts → find neutral junction → align
-   - scrambler: acquire hearts → find enemy junction → scramble
-5. explore (no targets found → move toward unexplored areas)
+1. hub_camp_heal     — stay at hub until full HP (step ≤ 20)
+2. early_retreat     — rush back if low HP (step < 150)
+3. wipeout_recovery  — return to hub when dead (HP=0)
+4. retreat           — retreat when HP dangerously low
+5. oscillation_unstick — break extractor oscillation
+6. stall_unstick     — break position stall (12+ steps)
+7. emergency_mine    — ungeared non-miners help mine when broke
+8. gear_delay        — delay aligner gear in early game
+9. gear_acquisition  — get role gear or mine to fund it
+10. role_dispatch    — miner/aligner/scrambler action
 ```
+`TickContext` is built once per tick with all computed state (position, junctions, AOE flags, etc.), eliminating repeated queries.
 
 ### Pressure Budgets (role allocation)
 Controls how many agents become aligners vs miners vs scramblers:

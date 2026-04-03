@@ -17,27 +17,26 @@ from cvc.agent import (
     _ELEMENTS,
     absolute_position,
     format_position,
-    has_role_gear,
     heart_batch_target,
     inventory_signature,
     manhattan,
-    needs_emergency_mining,
     phase_name,
-    team_can_afford_gear,
+    resource_total,
+    team_id,
 )
+from cvc.agent.decisions import run_pipeline
 from cvc.agent.junctions import JunctionMixin
 from cvc.agent.navigation import MoveAttempt, NavigationMixin, NavigationObservation
 from cvc.agent.pressure import PressureMixin
 from cvc.agent.roles import RolesMixin
 from cvc.agent.targeting import TargetingMixin
+from cvc.agent.tick_context import TickContext, build_tick_context
 from cvc.agent.world_model import WorldModel
 from mettagrid.policy.policy import AgentPolicy
 from mettagrid.policy.policy_env_interface import PolicyEnvInterface
 from mettagrid.simulator import Action
 from mettagrid.simulator.interface import AgentObservation
 
-_ALIGNER_GEAR_DELAY_STEPS = 0
-_OSCILLATION_UNSTICK_STEPS = 4
 _COGSGUARD_SURFACE = CogsguardSemanticSurface()
 
 
@@ -199,6 +198,12 @@ class CvcEngine(
     # ── Main decision tree ──────────────────────────────────────────
 
     def _choose_action(self, state: MettagridState, role: str) -> tuple[Action, str]:
+        self._clear_targets_for_role(role)
+        ctx = self._build_tick_context(state)
+        return run_pipeline(ctx, role, self)
+
+    def _clear_targets_for_role(self, role: str) -> None:
+        """Reset target claims when switching to an incompatible role."""
         if role not in {"aligner", "miner"}:
             self._clear_target_claim()
             self._clear_sticky_target()
@@ -208,65 +213,15 @@ class CvcEngine(
             self._sticky_target_kind is not None and not self._sticky_target_kind.endswith("_extractor")
         ):
             self._clear_sticky_target()
-        safe_target = self._nearest_hub(state)
-        safe_distance = 0 if safe_target is None else manhattan(absolute_position(state), safe_target.position)
 
-        hp = int(state.self_state.inventory.get("hp", 0))
-        step = state.step or self._step_index
-
-        # Stay at hub until HP reaches 100 (territory heals +100/tick in range).
-        if hp < 100 and hp > 0 and safe_target is not None and safe_distance <= 3 and step <= 20:
-            return self._hold(summary="hub_camp_heal", vibe="change_vibe_default")
-
-        # Early game: rush back to territory before dying.
-        if step < 150 and safe_target is not None and safe_distance > 8:
-            if hp < 40 or (hp < 50 and safe_distance > 15):
-                return self._move_to_known(state, safe_target, summary="survival_retreat")
-
-        # Wipeout recovery: if hp=0, return to hub area.
-        if hp == 0 and safe_target is not None:
-            if safe_distance > 5:
-                return self._move_to_known(state, safe_target, summary="wipeout_return_hub")
-            return self._miner_action(state, summary_prefix="wipeout_mine_")
-
-        if self._should_retreat(state, role, safe_target):
-            self._clear_target_claim()
-            self._clear_sticky_target()
-            if safe_target is not None and safe_distance > 2:
-                return self._move_to_known(state, safe_target, summary="retreat_to_hub")
-            if has_role_gear(state, role):
-                return self._hold(summary="retreat_hold", vibe="change_vibe_default")
-
-        if self._oscillation_steps >= _OSCILLATION_UNSTICK_STEPS:
-            return self._unstick_action(state, role)
-
-        if self._stalled_steps >= 12:
-            return self._unstick_action(state, role)
-
-        # Emergency mining: only aligners/scramblers without gear AND hearts
-        # help mine. Keeping geared agents on-task is more valuable than
-        # marginal resource gains from pulling them off.
-        if role != "miner" and needs_emergency_mining(state):
-            if not has_role_gear(state, role) and int(state.self_state.inventory.get("heart", 0)) <= 0:
-                return self._miner_action(state, summary_prefix="emergency_")
-
-        if role == "aligner" and not has_role_gear(state, role):
-            if (state.step or self._step_index) < _ALIGNER_GEAR_DELAY_STEPS:
-                self._clear_target_claim()
-                self._clear_sticky_target()
-                return self._miner_action(state, summary_prefix="delay_gear_")
-
-        if not has_role_gear(state, role):
-            self._clear_target_claim()
-            self._clear_sticky_target()
-            if not team_can_afford_gear(state, role):
-                return self._miner_action(state, summary_prefix=f"fund_{role}_gear_")
-            return self._acquire_role_gear(state, role)
-
-        if role == "miner":
-            return self._miner_action(state)
-        if role == "aligner":
-            return self._aligner_action(state)
-        if role == "scrambler":
-            return self._scrambler_action(state)
-        return self._explore_action(state, role=role, summary="explore")
+    def _build_tick_context(self, state: MettagridState) -> TickContext:
+        return build_tick_context(
+            state,
+            world_model=self._world_model,
+            nearest_hub_fn=self._nearest_hub,
+            known_junctions_fn=self._known_junctions,
+            stalled_steps=self._stalled_steps,
+            oscillation_steps=self._oscillation_steps,
+            resource_bias=self._resource_bias,
+            step_index=self._step_index,
+        )

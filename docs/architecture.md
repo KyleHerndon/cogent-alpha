@@ -54,8 +54,8 @@ Between these calls, Python runs autonomously using whatever knob values were la
 
 1. `process_obs()` → build MettagridState, update world model + junction memory
 2. `desired_role()` program → pressure-based role allocation (miner/aligner/scrambler)
-3. `step()` program → delegates to `engine._choose_action()`:
-   hub_camp_heal → early_survival → wipeout_recovery → retreat → unstick → emergency_mine → acquire_gear → **role_action** → explore
+3. `step()` program → builds `TickContext`, then `run_pipeline()`:
+   hub_camp_heal → early_retreat → wipeout_recovery → retreat → oscillation_unstick → stall_unstick → emergency_mine → gear_delay → gear_acquisition → **role_dispatch** → explore
 4. `finalize_step()` → record navigation observation
 5. Every ~500 steps: `analyze` LLM program → update `resource_bias`
 6. Every ~500 steps: `summarize` program → collect experience snapshot for PCO

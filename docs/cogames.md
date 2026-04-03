@@ -30,7 +30,18 @@ ANTHROPIC_API_KEY= PYTHONPATH=src/cogamer cogames play -m machina_1 \
   -c 8 -r none --seed 42
 ```
 
-## Uploading
+## Deploying
+
+### Prerequisites
+
+```bash
+uv sync                          # install project + dependencies
+cogames auth status              # verify auth (should show email)
+# If not authenticated:
+cogames auth set-token <token>   # set token from secrets
+```
+
+### Upload to Season
 
 Upload a policy to a season. Use the cogent name from `cogent/IDENTITY.md` as the policy name (`-n`). Must run from `src/cogamer/`:
 
@@ -43,6 +54,22 @@ cd src/cogamer && PYTHONPATH=. cogames upload \
   --season <season> \
   --skip-validation
 ```
+
+`setup_policy.py` runs on the remote server to install `anthropic[bedrock]` for LLM calls.
+
+### Validate Before Upload
+
+Always test locally across 5+ seeds before uploading:
+
+```bash
+for seed in 42 43 44 45 46; do
+  ANTHROPIC_API_KEY= PYTHONPATH=src/cogamer cogames play -m machina_1 \
+    -p class=cvc.cogamer_policy.CvCPolicy \
+    -c 8 -r none --seed $seed
+done
+```
+
+If average score drops vs baseline, do NOT upload — revert the change first.
 
 ## Monitoring
 
