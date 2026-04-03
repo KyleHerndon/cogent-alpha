@@ -12,7 +12,7 @@ Additional panels for the cogent dashboard, specific to CoGames.
 2. **Approach stats** — From `cogent/state.json`:
    - PCO vs design attempt counts and improvement rates
 
-3. **Experiment log** — From `cogent/memory/sessions/`:
+3. **Experiment log** — From memory:
    - Each session: timestamp, approach (PCO/design), what changed, result, score delta
 
 ## Panels
