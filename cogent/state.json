@@ -1,6 +1,13 @@
 {
   "approach_stats": {
     "pco": {"attempts": 0, "improvements": 0, "last_used": null},
-    "design": {"attempts": 1, "improvements": 1, "last_used": "20260401-001"}
+    "design": {"attempts": 2, "improvements": 2, "last_used": "20260406-001"}
+  },
+  "last_upload": {
+    "name": "alpha:v1",
+    "season": "beta-cvc",
+    "date": "2026-04-06",
+    "avg_score": 22.92,
+    "change": "Delay scrambler from step 100 to 300"
   }
 }
